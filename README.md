@@ -17,6 +17,8 @@
 以下是本项目使用到的库：
 
 1. `matplotlib`: 用于绘制图形以及将Matplotlib图形嵌入到Tkinter窗口中。
+2. `networkx`: 用于构建有向图。
+3. `graphviz`: 用于绘制有向图。
 
 ## 快速开始
 
@@ -25,7 +27,7 @@
 确保你的Python环境中已经安装了上述库。如果没有安装，可以使用以下命令进行安装：
 
 ```bash
-pip install tkinter matplotlib
+pip install matplotlib networkx graphviz
 ```
 
 ### 运行程序

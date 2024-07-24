@@ -8,10 +8,12 @@ from ProbabilityTree import ProbabilityTree
 # Accurate time measurement
 import time
 import itertools
+from solver import Solver
 
 DEBUG = False
 
 def calculate():
+    global DEBUG
     # Accurate time measurement
     start_time = time.time()
     deck = (int(entry_deck.get()), int(entry_climax_deck.get()))
@@ -125,6 +127,61 @@ def calculate_best_sequence():
 
     end_time = time.time()
     text_result.insert(tk.END, f"\nTotal time taken: {end_time - start_time} seconds\n")
+
+def find_best_strategy():
+    # Accurate time measurement
+    start_time = time.time()
+    deck = (int(entry_deck.get()), int(entry_climax_deck.get()))
+    level = (int(entry_level.get()), int(entry_climax_level.get()))
+    clock = (int(entry_clock.get()), int(entry_climax_clock.get()))
+    waiting_room = (int(entry_waiting_room.get()), int(entry_climax_waiting_room.get()))
+    atk = (int(entry_atk.get()), int(entry_atk_soul.get()))
+    
+    try:
+        operator_list = entry_operator_list.get().split(' ')
+        operator_list = [op.strip() for op in operator_list]
+        operator_list = [op for op in operator_list if op]  # Remove empty strings
+        
+    except ValueError:
+        text_result.delete('1.0', tk.END)
+        text_result.insert(tk.END, "Invalid operator list")
+
+    initial_player = Player(deck, waiting_room, level, clock, (0,0))
+    initial_atk_player = atkPlayer(atk)
+    initial_state = GameState(initial_player, initial_atk_player)
+    threshold = 28 - initial_state.hp()  # Auto-calculate threshold
+    entry_threshold.delete(0, tk.END)
+    entry_threshold.insert(0, str(threshold))  # Display calculated threshold
+
+    solver = Solver(initial_state, operator_list)
+    text_result.delete('1.0', tk.END)
+    time1 = time.time()
+    solver.solve()
+    time2 = time.time()
+    text_result.insert(tk.END, f"Solver time: {time2 - time1} seconds\n")
+    solver.show()
+    time3 = time.time()
+    text_result.insert(tk.END, f"Generate graph time: {time3 - time2} seconds. Save to strategy_graph.png\n")
+    result_dict, kill_prob, expectation, variance = solver.calculate_probabilities(threshold)
+    
+    # Update GUI with results
+    for damage, prob in result_dict.items():
+        text_result.insert(tk.END, f"Damage: {damage}, Probability: {format_result(prob)}\n")
+    text_result.insert(tk.END, f"Kill Probability for threshold {threshold}: {format_result(kill_prob)}\n")
+    text_result.insert(tk.END, f"Expected Damage: {format_result(expectation)}\n")
+    text_result.insert(tk.END, f"Variance: {format_result(variance)}\n")
+    
+    # Plotting the results
+    fig.clear()
+    labels = list(result_dict.keys())
+    values = list(result_dict.values())
+    # 横坐标为间隔为1的整数，纵坐标为对应的概率
+    plt.xticks(range(min(labels), max(labels) + 1, 1))
+    plt.bar(labels, values, color='blue')
+    plt.xlabel('Damage Values')
+    plt.ylabel('Probability')
+    plt.title('Probability Distribution of Damage Values')
+    canvas.draw()
     
 def format_result(value):
     if display_mode.get() == "Decimal":
@@ -135,6 +192,23 @@ def format_result(value):
         return str(value)  # Convert to fraction
     return value
 
+class ToggleButton(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Toggle Button Example")
+        self.geometry("200x100")
+
+        self.button_state = False  # 初始状态为关闭
+        self.toggle_button = tk.Button(self, text="OFF", width=10, command=self.toggle)
+        self.toggle_button.pack(pady=20)
+
+    def toggle(self):
+        if self.button_state:
+            self.toggle_button.config(text="OFF", bg="red")
+        else:
+            self.toggle_button.config(text="ON", bg="green")
+        self.button_state = not self.button_state
+        
 # Setup main window
 root = tk.Tk()
 root.title("WS Damage Calculator")
@@ -234,6 +308,10 @@ button_calculate.grid(row=10, column=0)
 # Calculate Best Sequence Button
 button_calculate_best_sequence = tk.Button(left_frame, text="Calculate Best Sequence", command=calculate_best_sequence, font=default_font)
 button_calculate_best_sequence.grid(row=10, column=1)
+
+# Find Best Strategy Button      
+debug_button = tk.Button(left_frame, text="Find Best Strategy", command=find_best_strategy, font=default_font)
+debug_button.grid(row=10, column=2)
 
 # Radio buttons for display mode
 display_mode = tk.StringVar(value="Decimal")  # Default display mode

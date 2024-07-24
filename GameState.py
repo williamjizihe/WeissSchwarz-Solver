@@ -264,6 +264,9 @@ class GameState:
         self.player.probability = self.probability
         self.atk_player.probability = self.probability
     
+    def __str__(self) -> str:
+        return f"{self.player.deck[1]}/{self.player.deck[0]} {self.player.waiting_room[1]}/{self.player.waiting_room[0]}\n {self.player.level[1]}/{self.player.level[0]} {self.player.clock[1]}/{self.player.clock[0]}\n{len(self.player.top_climax_prob)}\n{self.atk_player.deck[1]}/{self.atk_player.deck[0]} "
+        
     def is_terminal(self):
         return self.player.is_terminal()
     
