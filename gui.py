@@ -8,7 +8,6 @@ from ProbabilityTree import ProbabilityTree
 # Accurate time measurement
 import time
 import itertools
-import numpy as np
 
 DEBUG = False
 
@@ -106,12 +105,14 @@ def calculate_best_sequence():
     min_damage = min(min(res[1].keys()) for res in results[:3])
     max_damage = max(max(res[1].keys()) for res in results[:3])
     damage_indices = {damage: index for index, damage in enumerate(range(min_damage, max_damage + 1), start=0)}
-    x = np.arange(len(damage_indices))  # base x coordinates for bars
+    x = list(damage_indices.values())  # base x coordinates for bars
 
     ax = fig.add_subplot(111)
     for i, (seq, result_dict, _, _, _) in enumerate(results[:3]):
-        values = [result_dict.get(damage, 0) for damage in damage_indices]
-        ax.bar(x - width + i * width, values, width, label=f"Seq {i+1}: {' '.join(seq)}")
+        # Calculate offsets for each sequence
+        offsets = [index - width + i * width for index in x]
+        values = [result_dict.get(damage, 0) for damage in range(min_damage, max_damage + 1)]
+        ax.bar(offsets, values, width, label=f"Seq {i+1}: {' '.join(seq)}")
 
     ax.set_xlabel('Damage Values')
     ax.set_ylabel('Probability')

@@ -18,9 +18,6 @@
 
 1. `tkinter`: 用于创建图形用户界面。
 2. `matplotlib`: 用于绘制图形以及将Matplotlib图形嵌入到Tkinter窗口中。
-3. `itertools`: 迭代工具模块。
-4. `numpy`: 数值计算库。
-5. `sympy`: 用于分数计算。
 
 ## 快速开始
 
@@ -29,7 +26,7 @@
 确保你的Python环境中已经安装了上述库。如果没有安装，可以使用以下命令进行安装：
 
 ```bash
-pip install tkinter matplotlib numpy sympy
+pip install tkinter matplotlib
 ```
 
 ### 运行程序
