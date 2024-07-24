@@ -3,3 +3,11 @@ __pycache__/
 
 # ipynb
 *.ipynb
+
+# virtualenv
+venv/
+
+# build
+build/
+dist/
+*.spec

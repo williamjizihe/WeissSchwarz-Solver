@@ -16,8 +16,7 @@
 
 以下是本项目使用到的库：
 
-1. `tkinter`: 用于创建图形用户界面。
-2. `matplotlib`: 用于绘制图形以及将Matplotlib图形嵌入到Tkinter窗口中。
+1. `matplotlib`: 用于绘制图形以及将Matplotlib图形嵌入到Tkinter窗口中。
 
 ## 快速开始
 
