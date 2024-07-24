@@ -1,8 +1,8 @@
-from sympy import Rational
+from fractions import Fraction
 import re
 
 class Player:
-    def __init__(self, deck, waiting_room, level, clock, stock = (0, 0), probability=Rational(1), top_climax_prob=()):
+    def __init__(self, deck, waiting_room, level, clock, stock = (0, 0), probability=Fraction(1), top_climax_prob=()):
         '''
         deck: tuple, (Number of cards, Number of climaxes)
         waiting_room: tuple, (Number of cards, Number of climaxes)
@@ -67,8 +67,8 @@ class Player:
   
         states = []
         # Since the deck is shuffled, the top card probability is reset
-        climax_prob = Rational(new_deck[1], new_deck[0])
-        non_climax_prob = Rational(new_deck[0] - new_deck[1], new_deck[0])
+        climax_prob = Fraction(new_deck[1], new_deck[0])
+        non_climax_prob = Fraction(new_deck[0] - new_deck[1], new_deck[0])
        
         if climax_prob > 0:
             climax_game_state = Player(
@@ -106,7 +106,7 @@ class Player:
         if self.top_climax_prob:
             return self.top_climax_prob[0], Player(self.deck, self.waiting_room, self.level, self.clock, self.stock, self.probability, self.top_climax_prob[1:])
         else:
-            return Rational(self.deck[1], self.deck[0]), self
+            return Fraction(self.deck[1], self.deck[0]), self
         
     def take_damage(self, damage):
         if damage <= 0:
@@ -176,7 +176,7 @@ class Player:
                 if state.deck[0] == 0:
                     tmp.extend(state.refresh_deck())
                 else:
-                    state.top_climax_prob = tuple([Rational(0)] * non_climax_num)
+                    state.top_climax_prob = tuple([Fraction(0)] * non_climax_num)
                     tmp.append(state)
                 
                 for s in tmp:
@@ -191,6 +191,8 @@ class Player:
                 return
             
             climax_prob, state = state.get_climax_prob()
+            if state == state:
+                climax_prob = Fraction(state.deck[1], state.deck[0] - non_climax_num)
             non_climax_prob = 1 - climax_prob
             
             if climax_prob > 0:
@@ -224,7 +226,7 @@ class Player:
         pass
     
 class atkPlayer:
-    def __init__(self, deck, stock=(0, 0), probability=Rational(1)):
+    def __init__(self, deck, stock=(0, 0), probability=Fraction(1)):
         '''
         deck: tuple, (Number of cards, Number of souls)
         stock: tuple, (Number of cards, Number of souls)
@@ -237,7 +239,7 @@ class atkPlayer:
         return atkPlayer(self.deck, self.stock, self.probability)
     
     def trigger(self):
-        soul_prob = Rational(self.deck[1], self.deck[0])
+        soul_prob = Fraction(self.deck[1], self.deck[0])
         non_soul_prob = 1 - soul_prob
         
         soul_game_state = atkPlayer(

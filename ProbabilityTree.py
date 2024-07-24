@@ -1,5 +1,3 @@
-from sympy import Rational
-
 class ProbabilityTree:
     def __init__(self, initial_state, operator_list):
         self.root = initial_state
