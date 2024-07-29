@@ -347,7 +347,7 @@ class ToggleButton(tk.Tk):
         
 # Setup main window
 root = tk.Tk()
-root.title("WS Damage Calculator")
+root.title("WS Solver v1.0 Beta")
 
 # Set the initial size of the window
 root.geometry("1600x800")  # 宽度设置为1200像素，高度设置为800像素
