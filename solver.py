@@ -106,7 +106,7 @@ class Solver:
                 
 
         # 设置图像大小和分辨率
-        plt.figure(figsize=(40, 40), dpi=300)  # figsize 调整图像大小, dpi 调整分辨率
+        plt.figure(figsize=(30, 30), dpi=300)  # figsize 调整图像大小, dpi 调整分辨率
         
         # 绘制图形
         pos = graphviz_layout(G, root=0)  # 布局方式
