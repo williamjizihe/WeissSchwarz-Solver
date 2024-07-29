@@ -1,14 +1,14 @@
 # 用枚举找出最优攻击策略，时间复杂度极大，仅用于三种操作的情况
-import re
 import networkx as nx
 import matplotlib.pyplot as plt
 from networkx.drawing.nx_agraph import graphviz_layout
+from utils import parse_operator, to_str_group
 
 class solver_node:
-    def __init__(self, state, root_hp, operator_dict, last_op, parent, score=None, level=0):
+    def __init__(self, state, root_hp, operator_group_dict, last_op, parent, score=None, level=0):
         self.state = state
         self.root_hp = root_hp
-        self.operator_dict = operator_dict
+        self.operator_group_dict = operator_group_dict
         self.last_op = last_op
         self.score = score
         self.parent = parent
@@ -22,20 +22,29 @@ class solver_node:
             return
         
         self.children_groups = []
-        for op, times in self.operator_dict.items():
+        for ops, times in self.operator_group_dict.items():
             children = []
-            next_states = self.state.parse_operator(op)
-            op_remains = self.operator_dict.copy()
+            last_states = {self.state:self.state}
+            for op in ops:
+                next_states = {}
+                for state in last_states.values():
+                    for new_state in state.execute(op):
+                        if new_state in next_states:
+                            next_states[new_state].add_probability(new_state.probability)
+                        else:
+                            next_states[new_state] = new_state
+                last_states = next_states
+            ops_remains = self.operator_group_dict.copy()
             if times > 1:
-                op_remains[op] -= 1
+                ops_remains[ops] -= 1
             else:
-                del op_remains[op]
-            for state in next_states:
-                children.append(solver_node(state, self.root_hp, op_remains, op, self, level=self.level + 1))
+                del ops_remains[ops]
+            for state in last_states.values():
+                children.append(solver_node(state, self.root_hp, ops_remains, ops, self, level=self.level + 1))
             self.children_groups.append(children)
     
     def is_leaf(self):
-        return self.operator_dict == {} or self.state.is_terminal()
+        return self.operator_group_dict == {} or self.state.is_terminal()
     
     def is_root(self):
         return self.parent is None
@@ -61,46 +70,15 @@ class solver_node:
                 break
         return self.score
 
-    def get_description(self):
-        operator = operator.lower()  # 转换为小写以处理大小写不敏感的问题
-        moka_match = re.match(r'moka\((\d+)\)', operator)
-        damage_trigger_match = re.match(r'(\d+)t', operator)
-        damage_match = re.match(r'(\d+)', operator)
-        
-        last_state = self.parent.state
-        if moka_match:
-            moka_num = int(moka_match.group(1))
-            description = ''
-            x = len(self.state.player.top_climax_prob) - len(last_state.player.top_climax_prob)
-            description.join(f"During moka({moka_num}), {moka_num - x} climax cards are drawn. ")
-            if self.state.player.deck[0] > last_state.player.deck[0]:
-                description.join(f"After moka, the deck is reshuffled. 1 damage is dealt. ")
-                if self.state.player.clock[1] >= 1:
-                    description.join(f"The clock card is a climax card. ")
-                else:
-                    description.join(f"The clock card is not a climax card. ")
-            
-            return description
-        elif damage_trigger_match:
-            damage = int(damage_trigger_match.group(1))
-            description = ''
-            if last_state.atkPlayer.deck[1] > self.state.atkPlayer.deck[1]:
-                description.join(f"Triggered successfully, {damage+1} damage is dealt. ")
-            else:
-                description.join(f"Triggered failed, {damage} damage is dealt. ")
-            
-            if self.state.atkPlayer.deck[1] == 0:
-                description.join(f"The deck is reshuffled. ")
-
 class Solver:
-    def __init__(self, initial_state, operator_list):
-        self.operator_list = operator_list
-        self.operator_dict = {}
-        for op in operator_list:
-            self.operator_dict[op]  = self.operator_dict.get(op, 0) + 1
-        for op, times in self.operator_dict.items():
-            print(f"Operator {op}: {times}")
-        self.root = solver_node(initial_state, initial_state.hp(), self.operator_dict, None, None, level=0)
+    def __init__(self, initial_state, operator_group_list):
+        self.operator_group_list = operator_group_list
+        self.operator_group_dict = {}
+        for ops in operator_group_list:
+            self.operator_group_dict[ops] = self.operator_group_dict.get(ops, 0) + 1
+        for ops, times in self.operator_group_dict.items():
+            print(f"Operator {ops}: {times}")
+        self.root = solver_node(initial_state, initial_state.hp(), self.operator_group_dict, None, None, level=0)
     
     def solve(self):
         return self.root.get_score()
@@ -116,19 +94,19 @@ class Solver:
         while queue:
             node = queue.pop(0)
             
-            if node.level != len(self.operator_list):
+            if node.level != len(self.operator_group_list):
                 G.add_node(node_id, label=str(node.state))
                 node.id = node_id
                 
                 if not node.is_root():
-                    G.add_edge(node.parent.id, node.id, label=node.last_op)
+                    G.add_edge(node.parent.id, node.id, label=to_str_group(node.last_op))
                 node_id += 1
                 if not node.is_leaf():
                     queue.extend(node.best_children_group)
                 
 
         # 设置图像大小和分辨率
-        plt.figure(figsize=(20, 20), dpi=300)  # figsize 调整图像大小, dpi 调整分辨率
+        plt.figure(figsize=(40, 40), dpi=300)  # figsize 调整图像大小, dpi 调整分辨率
         
         # 绘制图形
         pos = graphviz_layout(G, root=0)  # 布局方式
